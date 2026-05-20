@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ICS to Excel Converter</title>
-    <script src="https://unpkg.com/ical.js@1.5.0/build/ical.min.js"></script>
-    <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -24,7 +22,6 @@
             --error-bg: #fef2f2;
             --radius: 12px;
             --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
-            --shadow-lg: 0 4px 24px rgba(0,0,0,0.1);
         }
 
         body {
@@ -38,32 +35,12 @@
             padding: 2rem 1rem;
         }
 
-        .container {
-            width: 100%;
-            max-width: 600px;
-        }
+        .container { width: 100%; max-width: 600px; }
 
-        header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        header .icon {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        header h1 {
-            font-size: 1.75rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-        }
-
-        header p {
-            color: var(--text-muted);
-            margin-top: 0.4rem;
-            font-size: 0.95rem;
-        }
+        header { text-align: center; margin-bottom: 2rem; }
+        header .icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        header h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; }
+        header p { color: var(--text-muted); margin-top: 0.4rem; font-size: 0.95rem; }
 
         .card {
             background: var(--surface);
@@ -88,30 +65,10 @@
             background: var(--primary-light);
         }
 
-        .drop-zone .drop-icon {
-            font-size: 2.5rem;
-            margin-bottom: 0.75rem;
-            display: block;
-        }
-
-        .drop-zone .drop-text {
-            font-size: 1rem;
-            color: var(--text);
-            font-weight: 500;
-        }
-
-        .drop-zone .drop-hint {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-top: 0.35rem;
-        }
-
-        .drop-zone input[type="file"] {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            cursor: pointer;
-        }
+        .drop-zone .drop-icon { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; }
+        .drop-zone .drop-text { font-size: 1rem; color: var(--text); font-weight: 500; }
+        .drop-zone .drop-hint { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem; }
+        .drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
         .file-info {
             display: none;
@@ -123,70 +80,38 @@
             margin-top: 1.25rem;
             font-size: 0.9rem;
         }
-
         .file-info.visible { display: flex; }
-
         .file-info .file-icon { font-size: 1.3rem; flex-shrink: 0; }
-
-        .file-info .file-name {
-            flex: 1;
-            font-weight: 500;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
+        .file-info .file-name { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .file-info .file-remove {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 1.2rem;
-            padding: 0 0.25rem;
-            line-height: 1;
-            transition: color 0.15s;
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; font-size: 1.2rem; padding: 0 0.25rem; line-height: 1; transition: color 0.15s;
         }
-
         .file-info .file-remove:hover { color: var(--error); }
 
         .btn {
-            display: block;
-            width: 100%;
-            padding: 0.85rem 1.5rem;
-            margin-top: 1.25rem;
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
+            display: block; width: 100%; padding: 0.85rem 1.5rem; margin-top: 1.25rem;
+            background: var(--primary); color: #fff; border: none; border-radius: 8px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
             transition: background 0.2s, opacity 0.2s, transform 0.1s;
         }
-
         .btn:hover:not(:disabled) { background: var(--primary-hover); }
         .btn:active:not(:disabled) { transform: scale(0.98); }
         .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
         .status {
-            display: none;
-            margin-top: 1.25rem;
-            padding: 0.85rem 1rem;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            line-height: 1.5;
+            display: none; margin-top: 1.25rem; padding: 0.85rem 1rem;
+            border-radius: 8px; font-size: 0.9rem; line-height: 1.5;
         }
-
         .status.visible { display: block; }
         .status.success { background: var(--success-bg); color: var(--success); }
         .status.error { background: var(--error-bg); color: var(--error); }
 
         footer {
-            margin-top: 2.5rem;
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 0.8rem;
+            margin-top: 2.5rem; text-align: center;
+            color: var(--text-muted); font-size: 0.78rem;
         }
+        footer .version { opacity: 0.6; margin-top: 0.25rem; }
 
         @media (max-width: 480px) {
             body { padding: 1rem 0.75rem; }
@@ -224,202 +149,223 @@
         <div class="status" id="status"></div>
     </div>
 
-    <footer>Tutto avviene nel tuo browser &mdash; nessun dato viene inviato a server esterni.</footer>
+    <footer>
+        <div>Tutto avviene nel tuo browser &mdash; nessun dato viene inviato a server esterni.</div>
+        <div class="version">v3</div>
+    </footer>
 </div>
 
 <script>
+/* ── Caricamento librerie con fallback e rilevamento errori ── */
 (function () {
     'use strict';
 
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const fileInfo = document.getElementById('fileInfo');
-    const fileName = document.getElementById('fileName');
-    const fileRemove = document.getElementById('fileRemove');
-    const convertBtn = document.getElementById('convertBtn');
-    const statusEl = document.getElementById('status');
+    var LIB_STATE = { ical: false, xlsx: false, failed: [] };
 
-    let selectedFile = null;
+    var ICAL_URLS = [
+        'https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js',
+        'https://unpkg.com/ical.js@1.5.0/build/ical.min.js'
+    ];
+    var XLSX_URLS = [
+        'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+        'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'
+    ];
 
+    function loadScript(urls, index, onSuccess, onAllFailed) {
+        if (index >= urls.length) { onAllFailed(); return; }
+        var s = document.createElement('script');
+        s.src = urls[index];
+        s.onload = onSuccess;
+        s.onerror = function () { loadScript(urls, index + 1, onSuccess, onAllFailed); };
+        document.head.appendChild(s);
+    }
+
+    function checkReady() {
+        if (LIB_STATE.failed.length > 0) {
+            showStatus('Errore critico: impossibile caricare ' + LIB_STATE.failed.join(', ') +
+                '. Controlla la connessione internet e ricarica la pagina.', 'error');
+            return;
+        }
+        if (LIB_STATE.ical && LIB_STATE.xlsx) {
+            initApp();
+        }
+    }
+
+    loadScript(ICAL_URLS, 0,
+        function () { LIB_STATE.ical = true; checkReady(); },
+        function () { LIB_STATE.failed.push('ical.js'); checkReady(); }
+    );
+
+    loadScript(XLSX_URLS, 0,
+        function () { LIB_STATE.xlsx = true; checkReady(); },
+        function () { LIB_STATE.failed.push('SheetJS'); checkReady(); }
+    );
+
+    /* ── Utility usata prima di initApp ── */
+    var statusEl = document.getElementById('status');
     function showStatus(msg, type) {
         statusEl.textContent = msg;
         statusEl.className = 'status visible ' + type;
     }
 
-    function hideStatus() {
-        statusEl.className = 'status';
-    }
+    /* ── App principale, eseguita solo dopo che entrambe le librerie sono pronte ── */
+    function initApp() {
+        var dropZone = document.getElementById('dropZone');
+        var fileInput = document.getElementById('fileInput');
+        var fileInfo = document.getElementById('fileInfo');
+        var fileName = document.getElementById('fileName');
+        var fileRemove = document.getElementById('fileRemove');
+        var convertBtn = document.getElementById('convertBtn');
 
-    function setFile(file) {
-        if (!file) return;
-        if (!file.name.toLowerCase().endsWith('.ics')) {
-            showStatus('Seleziona un file con estensione .ics', 'error');
-            return;
-        }
-        selectedFile = file;
-        fileName.textContent = file.name;
-        fileInfo.classList.add('visible');
-        convertBtn.disabled = false;
-        hideStatus();
-    }
+        var selectedFile = null;
 
-    function clearFile() {
-        selectedFile = null;
-        fileInput.value = '';
-        fileInfo.classList.remove('visible');
-        convertBtn.disabled = true;
-        hideStatus();
-    }
+        function hideStatus() { statusEl.className = 'status'; }
 
-    dropZone.addEventListener('dragover', function (e) {
-        e.preventDefault();
-        dropZone.classList.add('dragover');
-    });
-
-    dropZone.addEventListener('dragleave', function () {
-        dropZone.classList.remove('dragover');
-    });
-
-    dropZone.addEventListener('drop', function (e) {
-        e.preventDefault();
-        dropZone.classList.remove('dragover');
-        var files = e.dataTransfer.files;
-        if (files.length > 0) setFile(files[0]);
-    });
-
-    fileInput.addEventListener('change', function () {
-        if (fileInput.files.length > 0) setFile(fileInput.files[0]);
-    });
-
-    fileRemove.addEventListener('click', clearFile);
-
-    function formatDate(dt) {
-        if (!dt) return '';
-        try {
-            var d = dt.toJSDate ? dt.toJSDate() : new Date(dt);
-            if (isNaN(d.getTime())) return String(dt);
-            var pad = function (n) { return n < 10 ? '0' + n : String(n); };
-            return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
-                ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
-        } catch (_) {
-            return String(dt);
-        }
-    }
-
-    function durationMinutes(start, end) {
-        if (!start || !end) return '';
-        try {
-            var s = start.toJSDate ? start.toJSDate() : new Date(start);
-            var e = end.toJSDate ? end.toJSDate() : new Date(end);
-            if (isNaN(s.getTime()) || isNaN(e.getTime())) return '';
-            var mins = Math.round((e - s) / 60000);
-            if (mins < 0) return '';
-            var h = Math.floor(mins / 60);
-            var m = mins % 60;
-            return (h > 0 ? h + 'h ' : '') + m + 'min';
-        } catch (_) {
-            return '';
-        }
-    }
-
-    function parseICS(text) {
-        var jcal = ICAL.parse(text);
-        var comp = new ICAL.Component(jcal);
-        var vevents = comp.getAllSubcomponents('vevent');
-
-        if (vevents.length === 0) {
-            throw new Error('Il file non contiene eventi.');
+        function setFile(file) {
+            if (!file) return;
+            if (!file.name.toLowerCase().endsWith('.ics')) {
+                showStatus('Seleziona un file con estensione .ics', 'error');
+                return;
+            }
+            selectedFile = file;
+            fileName.textContent = file.name;
+            fileInfo.classList.add('visible');
+            convertBtn.disabled = false;
+            hideStatus();
         }
 
-        var rows = [];
-        for (var i = 0; i < vevents.length; i++) {
-            var ev = new ICAL.Event(vevents[i]);
-            var start = ev.startDate;
-            var end = ev.endDate;
-            rows.push({
-                'Titolo': ev.summary || '',
-                'Inizio': formatDate(start),
-                'Fine': formatDate(end),
-                'Durata': durationMinutes(start, end),
-                'Luogo': ev.location || '',
-                'Descrizione': (ev.description || '').replace(/\\n/g, '\n').trim(),
-                'Organizzatore': (function () {
-                    try {
-                        var org = vevents[i].getFirstProperty('organizer');
-                        if (!org) return '';
-                        var cn = org.getParameter('cn');
-                        return cn || org.getFirstValue().replace(/^mailto:/i, '');
-                    } catch (_) { return ''; }
-                })(),
-                'Stato': ev.status || ''
-            });
+        function clearFile() {
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.remove('visible');
+            convertBtn.disabled = true;
+            hideStatus();
         }
 
-        rows.sort(function (a, b) {
-            return (a['Inizio'] || '').localeCompare(b['Inizio'] || '');
+        /* ── Drag & drop ── */
+        dropZone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
         });
+        dropZone.addEventListener('dragleave', function () {
+            dropZone.classList.remove('dragover');
+        });
+        dropZone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) setFile(e.dataTransfer.files[0]);
+        });
+        fileInput.addEventListener('change', function () {
+            if (fileInput.files.length > 0) setFile(fileInput.files[0]);
+        });
+        fileRemove.addEventListener('click', clearFile);
 
-        return rows;
-    }
+        /* ── Formattazione date ── */
+        function pad(n) { return n < 10 ? '0' + n : String(n); }
 
-    function buildXLSX(rows, originalName) {
-        var ws = XLSX.utils.json_to_sheet(rows);
-
-        var colWidths = [
-            { wch: 35 },  // Titolo
-            { wch: 18 },  // Inizio
-            { wch: 18 },  // Fine
-            { wch: 12 },  // Durata
-            { wch: 25 },  // Luogo
-            { wch: 45 },  // Descrizione
-            { wch: 25 },  // Organizzatore
-            { wch: 12 }   // Stato
-        ];
-        ws['!cols'] = colWidths;
-
-        var wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Eventi');
-
-        var baseName = originalName.replace(/\.ics$/i, '');
-        XLSX.writeFile(wb, baseName + '.xlsx');
-    }
-
-    convertBtn.addEventListener('click', function () {
-        if (!selectedFile) return;
-
-        if (typeof ICAL === 'undefined' || typeof XLSX === 'undefined') {
-            showStatus('Errore: librerie non caricate. Ricarica la pagina o controlla la connessione internet.', 'error');
-            return;
+        function formatDate(dt) {
+            if (!dt) return '';
+            try {
+                var d = dt.toJSDate ? dt.toJSDate() : new Date(dt);
+                if (isNaN(d.getTime())) return String(dt);
+                return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+                    ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+            } catch (_) { return String(dt); }
         }
 
-        convertBtn.disabled = true;
-        convertBtn.textContent = 'Conversione in corso...';
-        hideStatus();
-
-        var reader = new FileReader();
-
-        reader.onload = function (e) {
+        function durationText(start, end) {
+            if (!start || !end) return '';
             try {
-                var text = e.target.result;
-                var rows = parseICS(text);
-                buildXLSX(rows, selectedFile.name);
-                showStatus('Conversione completata: ' + rows.length + ' eventi esportati.', 'success');
-            } catch (err) {
-                showStatus('Errore: ' + (err.message || 'Impossibile elaborare il file.'), 'error');
-            } finally {
+                var s = start.toJSDate ? start.toJSDate() : new Date(start);
+                var e = end.toJSDate ? end.toJSDate() : new Date(end);
+                if (isNaN(s.getTime()) || isNaN(e.getTime())) return '';
+                var mins = Math.round((e - s) / 60000);
+                if (mins < 0) return '';
+                var h = Math.floor(mins / 60);
+                var m = mins % 60;
+                return (h > 0 ? h + 'h ' : '') + m + 'min';
+            } catch (_) { return ''; }
+        }
+
+        /* ── Parsing ICS ── */
+        function parseICS(text) {
+            var jcal = ICAL.parse(text);
+            var comp = new ICAL.Component(jcal);
+            var vevents = comp.getAllSubcomponents('vevent');
+
+            if (vevents.length === 0) {
+                throw new Error('Il file non contiene eventi.');
+            }
+
+            var rows = [];
+            for (var i = 0; i < vevents.length; i++) {
+                var ev = new ICAL.Event(vevents[i]);
+                rows.push({
+                    'Titolo': ev.summary || '',
+                    'Inizio': formatDate(ev.startDate),
+                    'Fine': formatDate(ev.endDate),
+                    'Durata': durationText(ev.startDate, ev.endDate),
+                    'Luogo': ev.location || '',
+                    'Descrizione': (ev.description || '').replace(/\\n/g, '\n').trim(),
+                    'Organizzatore': (function () {
+                        try {
+                            var org = vevents[i].getFirstProperty('organizer');
+                            if (!org) return '';
+                            var cn = org.getParameter('cn');
+                            return cn || org.getFirstValue().replace(/^mailto:/i, '');
+                        } catch (_) { return ''; }
+                    })(),
+                    'Stato': ev.status || ''
+                });
+            }
+
+            rows.sort(function (a, b) {
+                return (a['Inizio'] || '').localeCompare(b['Inizio'] || '');
+            });
+            return rows;
+        }
+
+        /* ── Generazione XLSX ── */
+        function buildXLSX(rows, originalName) {
+            var ws = XLSX.utils.json_to_sheet(rows);
+            ws['!cols'] = [
+                { wch: 35 }, { wch: 18 }, { wch: 18 }, { wch: 12 },
+                { wch: 25 }, { wch: 45 }, { wch: 25 }, { wch: 12 }
+            ];
+            var wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Eventi');
+            XLSX.writeFile(wb, originalName.replace(/\.ics$/i, '') + '.xlsx');
+        }
+
+        /* ── Click conversione ── */
+        convertBtn.addEventListener('click', function () {
+            if (!selectedFile) return;
+
+            convertBtn.disabled = true;
+            convertBtn.textContent = 'Conversione in corso…';
+            hideStatus();
+
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    var rows = parseICS(e.target.result);
+                    buildXLSX(rows, selectedFile.name);
+                    showStatus('Conversione completata: ' + rows.length + ' eventi esportati.', 'success');
+                } catch (err) {
+                    showStatus('Errore: ' + (err.message || 'Impossibile elaborare il file.'), 'error');
+                } finally {
+                    convertBtn.disabled = false;
+                    convertBtn.textContent = 'Converti e Scarica';
+                }
+            };
+            reader.onerror = function () {
+                showStatus('Errore nella lettura del file.', 'error');
                 convertBtn.disabled = false;
                 convertBtn.textContent = 'Converti e Scarica';
-            }
-        };
-
-        reader.onerror = function () {
-            showStatus('Errore nella lettura del file.', 'error');
-            convertBtn.disabled = false;
-            convertBtn.textContent = 'Converti e Scarica';
-        };
-
-        reader.readAsText(selectedFile, 'UTF-8');
-    });
+            };
+            reader.readAsText(selectedFile, 'UTF-8');
+        });
+    }
 })();
 </script>
 
