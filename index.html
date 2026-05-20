@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ICS to Excel Converter</title>
-    <script src="https://cdn.jsdelivr.net/npm/ical.js@2.1.0/build/ical.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/ical.js@1.5.0/build/ical.min.js"></script>
+    <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -386,6 +386,11 @@
 
     convertBtn.addEventListener('click', function () {
         if (!selectedFile) return;
+
+        if (typeof ICAL === 'undefined' || typeof XLSX === 'undefined') {
+            showStatus('Errore: librerie non caricate. Ricarica la pagina o controlla la connessione internet.', 'error');
+            return;
+        }
 
         convertBtn.disabled = true;
         convertBtn.textContent = 'Conversione in corso...';
