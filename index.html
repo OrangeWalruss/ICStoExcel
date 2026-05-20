@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICS to Excel Converter</title>
+    <script src="https://cdn.jsdelivr.net/npm/ical.js@2.1.0/build/ical.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #eef2ff;
+            --surface: #ffffff;
+            --bg: #f8fafc;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #059669;
+            --success-bg: #ecfdf5;
+            --error: #dc2626;
+            --error-bg: #fef2f2;
+            --radius: 12px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+            --shadow-lg: 0 4px 24px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header .icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        header p {
+            color: var(--text-muted);
+            margin-top: 0.4rem;
+            font-size: 0.95rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .drop-zone .drop-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .drop-zone .drop-text {
+            font-size: 1rem;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .drop-zone .drop-hint {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.35rem;
+        }
+
+        .drop-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-info {
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.85rem 1rem;
+            background: var(--primary-light);
+            border-radius: 8px;
+            margin-top: 1.25rem;
+            font-size: 0.9rem;
+        }
+
+        .file-info.visible { display: flex; }
+
+        .file-info .file-icon { font-size: 1.3rem; flex-shrink: 0; }
+
+        .file-info .file-name {
+            flex: 1;
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-info .file-remove {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0 0.25rem;
+            line-height: 1;
+            transition: color 0.15s;
+        }
+
+        .file-info .file-remove:hover { color: var(--error); }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 0.85rem 1.5rem;
+            margin-top: 1.25rem;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s, transform 0.1s;
+        }
+
+        .btn:hover:not(:disabled) { background: var(--primary-hover); }
+        .btn:active:not(:disabled) { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        .status {
+            display: none;
+            margin-top: 1.25rem;
+            padding: 0.85rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .status.visible { display: block; }
+        .status.success { background: var(--success-bg); color: var(--success); }
+        .status.error { background: var(--error-bg); color: var(--error); }
+
+        footer {
+            margin-top: 2.5rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 1rem 0.75rem; }
+            .card { padding: 1.25rem; }
+            .drop-zone { padding: 1.75rem 1rem; }
+            header h1 { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="icon">📅</div>
+        <h1>ICS &rarr; Excel</h1>
+        <p>Carica un file calendario (.ics) e scarica il foglio Excel</p>
+    </header>
+
+    <div class="card">
+        <div class="drop-zone" id="dropZone">
+            <span class="drop-icon">📂</span>
+            <div class="drop-text">Trascina qui il file .ics</div>
+            <div class="drop-hint">oppure clicca per selezionarlo</div>
+            <input type="file" id="fileInput" accept=".ics">
+        </div>
+
+        <div class="file-info" id="fileInfo">
+            <span class="file-icon">📄</span>
+            <span class="file-name" id="fileName"></span>
+            <button class="file-remove" id="fileRemove" title="Rimuovi">&times;</button>
+        </div>
+
+        <button class="btn" id="convertBtn" disabled>Converti e Scarica</button>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <footer>Tutto avviene nel tuo browser &mdash; nessun dato viene inviato a server esterni.</footer>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileRemove = document.getElementById('fileRemove');
+    const convertBtn = document.getElementById('convertBtn');
+    const statusEl = document.getElementById('status');
+
+    let selectedFile = null;
+
+    function showStatus(msg, type) {
+        statusEl.textContent = msg;
+        statusEl.className = 'status visible ' + type;
+    }
+
+    function hideStatus() {
+        statusEl.className = 'status';
+    }
+
+    function setFile(file) {
+        if (!file) return;
+        if (!file.name.toLowerCase().endsWith('.ics')) {
+            showStatus('Seleziona un file con estensione .ics', 'error');
+            return;
+        }
+        selectedFile = file;
+        fileName.textContent = file.name;
+        fileInfo.classList.add('visible');
+        convertBtn.disabled = false;
+        hideStatus();
+    }
+
+    function clearFile() {
+        selectedFile = null;
+        fileInput.value = '';
+        fileInfo.classList.remove('visible');
+        convertBtn.disabled = true;
+        hideStatus();
+    }
+
+    dropZone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', function () {
+        dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        var files = e.dataTransfer.files;
+        if (files.length > 0) setFile(files[0]);
+    });
+
+    fileInput.addEventListener('change', function () {
+        if (fileInput.files.length > 0) setFile(fileInput.files[0]);
+    });
+
+    fileRemove.addEventListener('click', clearFile);
+
+    function formatDate(dt) {
+        if (!dt) return '';
+        try {
+            var d = dt.toJSDate ? dt.toJSDate() : new Date(dt);
+            if (isNaN(d.getTime())) return String(dt);
+            var pad = function (n) { return n < 10 ? '0' + n : String(n); };
+            return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+                ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        } catch (_) {
+            return String(dt);
+        }
+    }
+
+    function durationMinutes(start, end) {
+        if (!start || !end) return '';
+        try {
+            var s = start.toJSDate ? start.toJSDate() : new Date(start);
+            var e = end.toJSDate ? end.toJSDate() : new Date(end);
+            if (isNaN(s.getTime()) || isNaN(e.getTime())) return '';
+            var mins = Math.round((e - s) / 60000);
+            if (mins < 0) return '';
+            var h = Math.floor(mins / 60);
+            var m = mins % 60;
+            return (h > 0 ? h + 'h ' : '') + m + 'min';
+        } catch (_) {
+            return '';
+        }
+    }
+
+    function parseICS(text) {
+        var jcal = ICAL.parse(text);
+        var comp = new ICAL.Component(jcal);
+        var vevents = comp.getAllSubcomponents('vevent');
+
+        if (vevents.length === 0) {
+            throw new Error('Il file non contiene eventi.');
+        }
+
+        var rows = [];
+        for (var i = 0; i < vevents.length; i++) {
+            var ev = new ICAL.Event(vevents[i]);
+            var start = ev.startDate;
+            var end = ev.endDate;
+            rows.push({
+                'Titolo': ev.summary || '',
+                'Inizio': formatDate(start),
+                'Fine': formatDate(end),
+                'Durata': durationMinutes(start, end),
+                'Luogo': ev.location || '',
+                'Descrizione': (ev.description || '').replace(/\\n/g, '\n').trim(),
+                'Organizzatore': (function () {
+                    try {
+                        var org = vevents[i].getFirstProperty('organizer');
+                        if (!org) return '';
+                        var cn = org.getParameter('cn');
+                        return cn || org.getFirstValue().replace(/^mailto:/i, '');
+                    } catch (_) { return ''; }
+                })(),
+                'Stato': ev.status || ''
+            });
+        }
+
+        rows.sort(function (a, b) {
+            return (a['Inizio'] || '').localeCompare(b['Inizio'] || '');
+        });
+
+        return rows;
+    }
+
+    function buildXLSX(rows, originalName) {
+        var ws = XLSX.utils.json_to_sheet(rows);
+
+        var colWidths = [
+            { wch: 35 },  // Titolo
+            { wch: 18 },  // Inizio
+            { wch: 18 },  // Fine
+            { wch: 12 },  // Durata
+            { wch: 25 },  // Luogo
+            { wch: 45 },  // Descrizione
+            { wch: 25 },  // Organizzatore
+            { wch: 12 }   // Stato
+        ];
+        ws['!cols'] = colWidths;
+
+        var wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Eventi');
+
+        var baseName = originalName.replace(/\.ics$/i, '');
+        XLSX.writeFile(wb, baseName + '.xlsx');
+    }
+
+    convertBtn.addEventListener('click', function () {
+        if (!selectedFile) return;
+
+        convertBtn.disabled = true;
+        convertBtn.textContent = 'Conversione in corso...';
+        hideStatus();
+
+        var reader = new FileReader();
+
+        reader.onload = function (e) {
+            try {
+                var text = e.target.result;
+                var rows = parseICS(text);
+                buildXLSX(rows, selectedFile.name);
+                showStatus('Conversione completata: ' + rows.length + ' eventi esportati.', 'success');
+            } catch (err) {
+                showStatus('Errore: ' + (err.message || 'Impossibile elaborare il file.'), 'error');
+            } finally {
+                convertBtn.disabled = false;
+                convertBtn.textContent = 'Converti e Scarica';
+            }
+        };
+
+        reader.onerror = function () {
+            showStatus('Errore nella lettura del file.', 'error');
+            convertBtn.disabled = false;
+            convertBtn.textContent = 'Converti e Scarica';
+        };
+
+        reader.readAsText(selectedFile, 'UTF-8');
+    });
+})();
+</script>
+
+</body>
+</html>
